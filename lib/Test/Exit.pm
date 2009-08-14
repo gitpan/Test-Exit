@@ -1,5 +1,5 @@
 package Test::Exit;
-our $VERSION = '0.01';
+our $VERSION = '0.02';
 
 
 # ABSTRACT: Test that some code calls exit() without terminating testing
@@ -70,6 +70,7 @@ sub never_exits_ok (&;$) {
   __PACKAGE__->builder->ok(!defined _try_run($code), $description);
 }
 
+
 1;
 
 __END__
@@ -82,7 +83,7 @@ Test::Exit - Test that some code calls exit() without terminating testing
 
 =head1 VERSION
 
-version 0.01
+version 0.02
 
 =head1 SYNOPSIS
 
@@ -134,6 +135,10 @@ Tests that the supplied code completes without calling C<exit()>.
 
 
 
+=back 
+
+
+
 =head1 AUTHOR
 
   Andrew Rodland <andrew@hbslabs.com>
@@ -143,7 +148,7 @@ Tests that the supplied code completes without calling C<exit()>.
 This software is copyright (c) 2009 by HBS Labs, LLC..
 
 This is free software; you can redistribute it and/or modify it under
-the same terms as perl itself.
+the same terms as the Perl 5 programming language system itself.
 
 =cut 
 
