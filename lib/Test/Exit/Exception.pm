@@ -1,6 +1,5 @@
 package Test::Exit::Exception;
-our $VERSION = '0.02';
-
+our $VERSION = '0.03';
 
 # ABSTRACT: Exception class for Test::Exit
 
@@ -19,7 +18,6 @@ sub exit_value {
 1;
 
 __END__
-
 =pod
 
 =head1 NAME
@@ -28,7 +26,7 @@ Test::Exit::Exception - Exception class for Test::Exit
 
 =head1 VERSION
 
-version 0.02
+version 0.03
 
 =head1 AUTHOR
 
@@ -41,6 +39,5 @@ This software is copyright (c) 2009 by HBS Labs, LLC..
 This is free software; you can redistribute it and/or modify it under
 the same terms as the Perl 5 programming language system itself.
 
-=cut 
-
+=cut
 

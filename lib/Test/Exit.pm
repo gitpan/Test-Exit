@@ -1,6 +1,5 @@
 package Test::Exit;
-our $VERSION = '0.02';
-
+our $VERSION = '0.03';
 
 # ABSTRACT: Test that some code calls exit() without terminating testing
 
@@ -15,7 +14,10 @@ our @EXPORT = qw(exits_ok exits_zero exits_nonzero never_exits_ok);
 # We have to install this at compile-time and globally.
 # We provide one that does effectively nothing, and then override it locally.
 # Of course, if anyone else overrides CORE::GLOBAL::exit as well, bad stuff happens.
-our $exit_handler = sub { CORE::exit $_[0] };
+our $exit_handler = sub { 
+  my $value = @_ ? $_[0] : 0;
+  CORE::exit $value;
+};
 BEGIN {
   *CORE::GLOBAL::exit = sub { $exit_handler->(@_) };
 }
@@ -25,7 +27,10 @@ sub _try_run {
   my ($code) = @_;
 
   eval {
-    local $exit_handler = sub { die Test::Exit::Exception->new(shift) };
+    local $exit_handler = sub { 
+      my $value = @_ ? $_[0] : 0;
+      die Test::Exit::Exception->new($value) 
+    };
     $code->();
   };
   my $died = $@;
@@ -74,7 +79,6 @@ sub never_exits_ok (&;$) {
 1;
 
 __END__
-
 =pod
 
 =head1 NAME
@@ -83,17 +87,17 @@ Test::Exit - Test that some code calls exit() without terminating testing
 
 =head1 VERSION
 
-version 0.02
+version 0.03
 
 =head1 SYNOPSIS
 
-use Test::More tests => 4;
-use Test::Exit;
-
-exits_ok { exit 1; } "exiting exits"
-never_exits_ok { print "Hi!"; } "not exiting doesn't exit"
-exits_zero { exit 0; } "exited with success"
-exits_nonzero { exit 42; } "exited with failure"
+    use Test::More tests => 4;
+    use Test::Exit;
+    
+    exits_ok { exit 1; } "exiting exits"
+    never_exits_ok { print "Hi!"; } "not exiting doesn't exit"
+    exits_zero { exit 0; } "exited with success"
+    exits_nonzero { exit 42; } "exited with failure"
 
 =head1 DESCRIPTION
 
@@ -109,35 +113,23 @@ purpose of these tests.
 
 =over 4
 
-
-
 =item B<exits_ok>
 
 Tests that the supplied code calls C<exit()> at some point.
-
-
 
 =item B<exits_nonzero>
 
 Tests that the supplied code calls C<exit()> with a nonzero value.
 
-
-
 =item B<exits_zero>
 
 Tests that the supplied code calls C<exit()> with a zero (successful) value.
-
-
 
 =item B<never_exits_ok>
 
 Tests that the supplied code completes without calling C<exit()>.
 
-
-
-=back 
-
-
+=back
 
 =head1 AUTHOR
 
@@ -150,6 +142,5 @@ This software is copyright (c) 2009 by HBS Labs, LLC..
 This is free software; you can redistribute it and/or modify it under
 the same terms as the Perl 5 programming language system itself.
 
-=cut 
-
+=cut
 

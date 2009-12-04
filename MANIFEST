@@ -8,4 +8,6 @@ dist.ini
 lib/Test/Exit.pm
 lib/Test/Exit/Exception.pm
 t/basic.t
+t/release-pod-coverage.t
+t/release-pod-syntax.t
 t/todo-exception-handling.t
