@@ -1,12 +1,14 @@
 package Test::Exit;
-our $VERSION = '0.03';
+{
+  $Test::Exit::VERSION = '0.10';
+}
 
 # ABSTRACT: Test that some code calls exit() without terminating testing
 
 use strict;
 use warnings;
 
-use Test::Exit::Exception;
+use Return::MultiLevel qw(with_return);
 use base 'Test::Builder::Module';
 
 our @EXPORT = qw(exits_ok exits_zero exits_nonzero never_exits_ok);
@@ -14,36 +16,22 @@ our @EXPORT = qw(exits_ok exits_zero exits_nonzero never_exits_ok);
 # We have to install this at compile-time and globally.
 # We provide one that does effectively nothing, and then override it locally.
 # Of course, if anyone else overrides CORE::GLOBAL::exit as well, bad stuff happens.
-our $exit_handler = sub { 
-  my $value = @_ ? $_[0] : 0;
-  CORE::exit $value;
+our $exit_handler = sub {
+  CORE::exit $_[0];
 };
 BEGIN {
-  *CORE::GLOBAL::exit = sub { $exit_handler->(@_) };
+  *CORE::GLOBAL::exit = sub (;$) { $exit_handler->(@_ ? 0 + $_[0] : 0) };
 }
 
 
 sub _try_run {
   my ($code) = @_;
 
-  eval {
-    local $exit_handler = sub { 
-      my $value = @_ ? $_[0] : 0;
-      die Test::Exit::Exception->new($value) 
-    };
+  return with_return {
+    local $exit_handler = $_[0];
     $code->();
+    undef
   };
-  my $died = $@;
-
-  if (!defined $died || $died eq "") {
-    return undef;
-  }
-
-  unless (ref $died && $died->isa('Test::Exit::Exception')) {
-    die $died;
-  }
-
-  return $died->exit_value;
 }
 
 
@@ -87,7 +75,7 @@ Test::Exit - Test that some code calls exit() without terminating testing
 
 =head1 VERSION
 
-version 0.03
+version 0.10
 
 =head1 SYNOPSIS
 
@@ -133,11 +121,11 @@ Tests that the supplied code completes without calling C<exit()>.
 
 =head1 AUTHOR
 
-  Andrew Rodland <andrew@hbslabs.com>
+Andrew Rodland <andrew@hbslabs.com>
 
 =head1 COPYRIGHT AND LICENSE
 
-This software is copyright (c) 2009 by HBS Labs, LLC..
+This software is copyright (c) 2013 by HBS Labs, LLC..
 
 This is free software; you can redistribute it and/or modify it under
 the same terms as the Perl 5 programming language system itself.

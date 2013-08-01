@@ -4,19 +4,63 @@ use warnings;
 
 
 
-use ExtUtils::MakeMaker;
+use ExtUtils::MakeMaker 6.30;
 
-WriteMakefile(
-  DISTNAME  => 'Test-Exit',
-  NAME      => 'Test::Exit',
-  AUTHOR    => "Andrew\ Rodland\ \<andrew\@hbslabs\.com\>",
-  ABSTRACT  => "Test\ whether\ code\ exits\ without\ terminating\ testing\.",
-  VERSION   => '0.03',
-  EXE_FILES => [ qw() ],
-  (eval { ExtUtils::MakeMaker->VERSION(6.31) } ? (LICENSE => 'perl') : ()),
-  PREREQ_PM    => {
-    "Test::Builder" => '0.86',
+
+
+my %WriteMakefileArgs = (
+  "ABSTRACT" => "Test whether code exits without terminating testing.",
+  "AUTHOR" => "Andrew Rodland <andrew\@hbslabs.com>",
+  "BUILD_REQUIRES" => {},
+  "CONFIGURE_REQUIRES" => {
+    "ExtUtils::MakeMaker" => "6.30"
   },
-  test => {TESTS => 't/*.t'}
+  "DISTNAME" => "Test-Exit",
+  "EXE_FILES" => [],
+  "LICENSE" => "perl",
+  "NAME" => "Test::Exit",
+  "PREREQ_PM" => {
+    "Return::MultiLevel" => 0,
+    "Test::Builder" => "0.86"
+  },
+  "TEST_REQUIRES" => {},
+  "VERSION" => "0.10",
+  "test" => {
+    "TESTS" => "t/*.t"
+  }
 );
+
+
+unless ( eval { ExtUtils::MakeMaker->VERSION(6.63_03) } ) {
+  my $tr = delete $WriteMakefileArgs{TEST_REQUIRES};
+  my $br = $WriteMakefileArgs{BUILD_REQUIRES};
+  for my $mod ( keys %$tr ) {
+    if ( exists $br->{$mod} ) {
+      $br->{$mod} = $tr->{$mod} if $tr->{$mod} > $br->{$mod};
+    }
+    else {
+      $br->{$mod} = $tr->{$mod};
+    }
+  }
+}
+
+unless ( eval { ExtUtils::MakeMaker->VERSION(6.56) } ) {
+  my $br = delete $WriteMakefileArgs{BUILD_REQUIRES};
+  my $pp = $WriteMakefileArgs{PREREQ_PM};
+  for my $mod ( keys %$br ) {
+    if ( exists $pp->{$mod} ) {
+      $pp->{$mod} = $br->{$mod} if $br->{$mod} > $pp->{$mod};
+    }
+    else {
+      $pp->{$mod} = $br->{$mod};
+    }
+  }
+}
+
+delete $WriteMakefileArgs{CONFIGURE_REQUIRES}
+  unless eval { ExtUtils::MakeMaker->VERSION(6.52) };
+
+WriteMakefile(%WriteMakefileArgs);
+
+
 
