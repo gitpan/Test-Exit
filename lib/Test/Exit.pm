@@ -1,6 +1,6 @@
 package Test::Exit;
 {
-  $Test::Exit::VERSION = '0.10';
+  $Test::Exit::VERSION = '0.11';
 }
 
 # ABSTRACT: Test that some code calls exit() without terminating testing
@@ -11,7 +11,7 @@ use warnings;
 use Return::MultiLevel qw(with_return);
 use base 'Test::Builder::Module';
 
-our @EXPORT = qw(exits_ok exits_zero exits_nonzero never_exits_ok);
+our @EXPORT = qw(exit_code exits_ok exits_zero exits_nonzero never_exits_ok);
 
 # We have to install this at compile-time and globally.
 # We provide one that does effectively nothing, and then override it locally.
@@ -24,7 +24,7 @@ BEGIN {
 }
 
 
-sub _try_run {
+sub exit_code(&) {
   my ($code) = @_;
 
   return with_return {
@@ -38,21 +38,21 @@ sub _try_run {
 sub exits_ok (&;$) {
   my ($code, $description) = @_;
 
-  __PACKAGE__->builder->ok(defined _try_run($code), $description);
+  __PACKAGE__->builder->ok(defined &exit_code($code), $description);
 }
 
 
 sub exits_nonzero (&;$) {
   my ($code, $description) = @_;
 
-  __PACKAGE__->builder->ok(_try_run($code), $description);
+  __PACKAGE__->builder->ok(&exit_code($code), $description);
 }
 
 
 sub exits_zero (&;$) {
   my ($code, $description) = @_;
   
-  my $exit = _try_run($code);
+  my $exit = &exit_code($code);
   __PACKAGE__->builder->ok(defined $exit && $exit == 0, $description);
 }
 
@@ -60,9 +60,8 @@ sub exits_zero (&;$) {
 sub never_exits_ok (&;$) {
   my ($code, $description) = @_;
 
-  __PACKAGE__->builder->ok(!defined _try_run($code), $description);
+  __PACKAGE__->builder->ok(!defined &exit_code($code), $description);
 }
-
 
 1;
 
@@ -75,57 +74,67 @@ Test::Exit - Test that some code calls exit() without terminating testing
 
 =head1 VERSION
 
-version 0.10
+version 0.11
 
 =head1 SYNOPSIS
 
     use Test::More tests => 4;
     use Test::Exit;
     
-    exits_ok { exit 1; } "exiting exits"
-    never_exits_ok { print "Hi!"; } "not exiting doesn't exit"
-    exits_zero { exit 0; } "exited with success"
-    exits_nonzero { exit 42; } "exited with failure"
+    is exit_code { exit 75; }, 75, "procmail not found";
+    exits_ok { exit 1; } "exiting exits";
+    never_exits_ok { print "Hi!"; } "not exiting doesn't exit"l
+    exits_zero { exit 0; } "exited with success";
+    exits_nonzero { exit 42; } "exited with failure";
 
 =head1 DESCRIPTION
 
-Test::Exit provides some simple tools for testing that code does or does not 
-call C<exit()>, while stopping code that does exit at the point of the C<exit()>.
-Currently it does so by means of exceptions, so it B<will not function properly>
-if the code under test calls C<exit()> inside of an C<eval> block or string.
+Test::Exit provides some simple tools for testing code that might call
+C<exit()>, providing you with the status code without exiting the test
+file.
 
 The only criterion tested is that the supplied code does or does not call
 C<exit()>. If the code throws an exception, the exception will be propagated
-and you will have to call it yourself. C<die()>ing is not exiting for the
+and you will have to catch it yourself. C<die()>ing is not exiting for the
 purpose of these tests.
 
-=over 4
+Unlike previous versions of this module, the current version doesn't use
+exceptions to do its work, so even if you call C<exit()> inside of an
+C<eval>, everything should work.
 
-=item B<exits_ok>
+=head1 FUNCTIONS
+
+=head2 exit_code
+
+Runs the given code. If the code calls C<exit()>, then C<exit_code> will
+return a number, which is the status that C<exit()> would have exited with.
+If the code never calls C<exit()>, returns C<undef>. This is the
+L<Test::Fatal>-like interface. All of the other functions are wrappers for
+this one, retained for legacy purposes.
+
+=head2 exits_ok
 
 Tests that the supplied code calls C<exit()> at some point.
 
-=item B<exits_nonzero>
+=head2 exits_nonzero
 
 Tests that the supplied code calls C<exit()> with a nonzero value.
 
-=item B<exits_zero>
+=head2 exits_zero
 
 Tests that the supplied code calls C<exit()> with a zero (successful) value.
 
-=item B<never_exits_ok>
+=head2 never_exits_ok
 
 Tests that the supplied code completes without calling C<exit()>.
 
-=back
-
 =head1 AUTHOR
 
-Andrew Rodland <andrew@hbslabs.com>
+Andrew Rodland <arodland@cpan.org>
 
 =head1 COPYRIGHT AND LICENSE
 
-This software is copyright (c) 2013 by HBS Labs, LLC..
+This software is copyright (c) 2013 by Andrew Rodland.
 
 This is free software; you can redistribute it and/or modify it under
 the same terms as the Perl 5 programming language system itself.

@@ -10,7 +10,7 @@ use ExtUtils::MakeMaker 6.30;
 
 my %WriteMakefileArgs = (
   "ABSTRACT" => "Test whether code exits without terminating testing.",
-  "AUTHOR" => "Andrew Rodland <andrew\@hbslabs.com>",
+  "AUTHOR" => "Andrew Rodland <arodland\@cpan.org>",
   "BUILD_REQUIRES" => {},
   "CONFIGURE_REQUIRES" => {
     "ExtUtils::MakeMaker" => "6.30"
@@ -24,7 +24,7 @@ my %WriteMakefileArgs = (
     "Test::Builder" => "0.86"
   },
   "TEST_REQUIRES" => {},
-  "VERSION" => "0.10",
+  "VERSION" => "0.11",
   "test" => {
     "TESTS" => "t/*.t"
   }
